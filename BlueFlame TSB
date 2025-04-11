@@ -50,7 +50,7 @@ while true do
     local LocalPlayer = Players.LocalPlayer
     
     local function CreateESPBox(player)
-        if player == LocalPlayer then return end -- Nie dodawaj ESP dla siebie
+        if player == LocalPlayer then return end
         
         local character = player.Character
         if not character then return end
@@ -67,7 +67,7 @@ while true do
         
         local frame = Instance.new("Frame", billboard)
         frame.Size = UDim2.new(1, 0, 1, 0)
-        frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Niebieski kolor
+        frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
         frame.BorderSizePixel = 2
         frame.BackgroundTransparency = 0.5
         
@@ -120,7 +120,7 @@ while true do
         local RunService = game:GetService("RunService")
         local Players = game:GetService("Players")
         local LocalPlayer = Players.LocalPlayer
-        local SpinSpeed = 100 -- Prędkość obracania w stopniach na sekundę
+        local SpinSpeed = 100
         
         local function Spin()
             if LocalPlayer.Character then
