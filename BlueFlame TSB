@@ -1,9 +1,9 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "BlueFlame TSB Paid",
+    Name = "BlueFlame BloxFruits Paid",
     Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
-    LoadingTitle = "ladowaning...",
+    LoadingTitle = "loading...",
     LoadingSubtitle = "by Nielegalni",
     Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
  
@@ -13,7 +13,7 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = {
        Enabled = true,
        FolderName = nil, -- Create a custom folder for your hub/game
-       FileName = "BlueFlame Hub"
+       FileName = "BlueFlame"
     },
  
     Discord = {
@@ -24,9 +24,9 @@ local Window = Rayfield:CreateWindow({
  
     KeySystem = true, -- Set this to true to use our key system
     KeySettings = {
-       Title = "BlueFlame",
+       Title = "BlueFlame Paid",
        Subtitle = "Key System",
-       Note = "Key is in discord!", -- Use this to tell the user how to get a key
+       Note = "key is in discord!", -- Use this to tell the user how to get a key
        FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
        SaveKey = false, -- The user's key will be saved, but if you change the key, they will be unable to use your script
        GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
@@ -36,113 +36,131 @@ local Window = Rayfield:CreateWindow({
 
  local MainTab = Window:CreateTab("Main", 4483362458) -- Title, Image
 
- local Toggle = Tab:CreateToggle({
+ local PlayerTab = Window:CreateTab("Player", 4483362458) -- Title, Image
+
+ local Toggle = MainTab:CreateToggle({
     Name = "ESP",
     CurrentValue = false,
     Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-    Callback = function(ESP)
-while true do
-    wait(5)
-    print("ESP")
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local Camera = game.Workspace.CurrentCamera
-    local LocalPlayer = Players.LocalPlayer
-    
-    local function CreateESPBox(player)
-        if player == LocalPlayer then return end
-        
-        local character = player.Character
-        if not character then return end
-        
-        local head = character:FindFirstChild("Head")
-        if not head then return end
-        
-        local billboard = Instance.new("BillboardGui")
-        billboard.Adornee = head
-        billboard.Size = UDim2.new(4, 0, 5, 0)
-        billboard.StudsOffset = Vector3.new(0, 2, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Name = "ESPBox"
-        
-        local frame = Instance.new("Frame", billboard)
-        frame.Size = UDim2.new(1, 0, 1, 0)
-        frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
-        frame.BorderSizePixel = 2
-        frame.BackgroundTransparency = 0.5
-        
-        local nameTag = Instance.new("TextLabel", billboard)
-        nameTag.Size = UDim2.new(1, 0, 0.2, 0)
-        nameTag.Position = UDim2.new(0, 0, -0.2, 0)
-        nameTag.BackgroundTransparency = 1
-        nameTag.Text = player.Name
-        nameTag.TextColor3 = Color3.fromRGB(255, 255, 255)
-        nameTag.TextStrokeTransparency = 0.5
-        nameTag.TextScaled = true
-        
-        billboard.Parent = character
-    end
-    
-    local function RemoveESPBox(player)
-        if player.Character then
-            local espBox = player.Character:FindFirstChild("ESPBox")
-            if espBox then
-                espBox:Destroy()
-            end
-        end
-    end
-    
-    local function UpdateESP()
-        for _, player in pairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer then
-                if player.Character and player.Character:FindFirstChild("Head") then
-                    if not player.Character:FindFirstChild("ESPBox") then
-                        CreateESPBox(player)
-                    end
-                else
-                    RemoveESPBox(player)
-                end
-            end
-        end
-    end
-    
-    Players.PlayerAdded:Connect(CreateESPBox)
-    Players.PlayerRemoving:Connect(RemoveESPBox)
-    RunService.RenderStepped:Connect(UpdateESP)
-    end,
-})
-
- local Toggle = Tab:CreateToggle({
-    Name = "SpinBot",
-    CurrentValue = false,
-    Flag = "Toggle1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
     Callback = function(Value)
-        local RunService = game:GetService("RunService")
-        local Players = game:GetService("Players")
-        local LocalPlayer = Players.LocalPlayer
-        local SpinSpeed = 100
-        
-        local function Spin()
-            if LocalPlayer.Character then
-                local humanoidRootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if humanoidRootPart then
-                    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.Angles(0, math.rad(SpinSpeed * RunService.RenderStepped:Wait()), 0)
-                end
-            end
+ -- settings
+ local settings = {
+    defaultcolor = Color3.fromRGB(255,0,0),
+    teamcheck = false,
+    teamcolor = true
+ };
+ 
+ -- services
+ local runService = game:GetService("RunService");
+ local players = game:GetService("Players");
+ 
+ -- variables
+ local localPlayer = players.LocalPlayer;
+ local camera = workspace.CurrentCamera;
+ 
+ -- functions
+ local newVector2, newColor3, newDrawing = Vector2.new, Color3.new, Drawing.new;
+ local tan, rad = math.tan, math.rad;
+ local round = function(...) local a = {}; for i,v in next, table.pack(...) do a[i] = math.round(v); end return unpack(a); end;
+ local wtvp = function(...) local a, b = camera.WorldToViewportPoint(camera, ...) return newVector2(a.X, a.Y), b, a.Z end;
+ 
+ local espCache = {};
+ local function createEsp(player)
+    local drawings = {};
+    
+    drawings.box = newDrawing("Square");
+    drawings.box.Thickness = 1;
+    drawings.box.Filled = false;
+    drawings.box.Color = settings.defaultcolor;
+    drawings.box.Visible = false;
+    drawings.box.ZIndex = 2;
+ 
+    drawings.boxoutline = newDrawing("Square");
+    drawings.boxoutline.Thickness = 3;
+    drawings.boxoutline.Filled = false;
+    drawings.boxoutline.Color = newColor3();
+    drawings.boxoutline.Visible = false;
+    drawings.boxoutline.ZIndex = 1;
+ 
+    espCache[player] = drawings;
+ end
+ 
+ local function removeEsp(player)
+    if rawget(espCache, player) then
+        for _, drawing in next, espCache[player] do
+            drawing:Remove();
         end
-        
-        RunService.RenderStepped:Connect(Spin)
+        espCache[player] = nil;
+    end
+ end
+ 
+ local function updateEsp(player, esp)
+    local character = player and player.Character;
+    if character then
+        local cframe = character:GetModelCFrame();
+        local position, visible, depth = wtvp(cframe.Position);
+        esp.box.Visible = visible;
+        esp.boxoutline.Visible = visible;
+ 
+        if cframe and visible then
+            local scaleFactor = 1 / (depth * tan(rad(camera.FieldOfView / 2)) * 2) * 1000;
+            local width, height = round(4 * scaleFactor, 5 * scaleFactor);
+            local x, y = round(position.X, position.Y);
+ 
+            esp.box.Size = newVector2(width, height);
+            esp.box.Position = newVector2(round(x - width / 2, y - height / 2));
+            esp.box.Color = settings.teamcolor and player.TeamColor.Color or settings.defaultcolor;
+ 
+            esp.boxoutline.Size = esp.box.Size;
+            esp.boxoutline.Position = esp.box.Position;
+        end
+    else
+        esp.box.Visible = false;
+        esp.boxoutline.Visible = false;
+    end
+ end
+ 
+ -- main
+ for _, player in next, players:GetPlayers() do
+    if player ~= localPlayer then
+        createEsp(player);
+    end
+ end
+ 
+ players.PlayerAdded:Connect(function(player)
+    createEsp(player);
+ end);
+ 
+ players.PlayerRemoving:Connect(function(player)
+    removeEsp(player);
+ end)
+ 
+ runService:BindToRenderStep("esp", Enum.RenderPriority.Camera.Value, function()
+    for player, drawings in next, espCache do
+        if settings.teamcheck and player.Team == localPlayer.Team then
+            continue;
+        end
+ 
+        if drawings and player ~= localPlayer then
+            updateEsp(player, drawings);
+        end
+    end
+ end)
     end,
  })
 
- local Slider = MainTab:CreateSlider({
-    Name = "Speed",
-    Range = {1, 50},
-    Increment = 10,
-    Suffix = "WalkSpeed",
-    CurrentValue = 1,
-    Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
-    Callback = function(Value)
-    game.Players.LocalPlayer.Character:SetAttribute("SpeedMultiplier", Value) 
+ local Button = PlayerTab:CreateButton({
+    Name = "Teleport Tool",
+    Callback = function()
+        mouse = game.Players.LocalPlayer:GetMouse()
+        tool = Instance.new("Tool")
+        tool.RequiresHandle = false
+        tool.Name = "ŁO JA SIĘ TEPAM"
+        tool.Activated:connect(function()
+        local pos = mouse.Hit+Vector3.new(0,2.5,0)
+        pos = CFrame.new(pos.X,pos.Y,pos.Z)
+        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos
+        end)
+        tool.Parent = game.Players.LocalPlayer.Backpack
     end,
  })
