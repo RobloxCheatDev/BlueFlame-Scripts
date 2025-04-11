@@ -46,24 +46,24 @@ local Window = Rayfield:CreateWindow({
    defaultcolor = Color3.fromRGB(255,0,0),
    teamcheck = false,
    teamcolor = true
-};
+ };
 
--- services
-local runService = game:GetService("RunService");
-local players = game:GetService("Players");
+ -- services
+ local runService = game:GetService("RunService");
+ local players = game:GetService("Players");
 
--- variables
-local localPlayer = players.LocalPlayer;
-local camera = workspace.CurrentCamera;
+ -- variables
+ local localPlayer = players.LocalPlayer;
+ local camera = workspace.CurrentCamera;
 
--- functions
-local newVector2, newColor3, newDrawing = Vector2.new, Color3.new, Drawing.new;
-local tan, rad = math.tan, math.rad;
-local round = function(...) local a = {}; for i,v in next, table.pack(...) do a[i] = math.round(v); end return unpack(a); end;
-local wtvp = function(...) local a, b = camera.WorldToViewportPoint(camera, ...) return newVector2(a.X, a.Y), b, a.Z end;
+ -- functions
+ local newVector2, newColor3, newDrawing = Vector2.new, Color3.new, Drawing.new;
+ local tan, rad = math.tan, math.rad;
+ local round = function(...) local a = {}; for i,v in next, table.pack(...) do a[i] = math.round(v); end return unpack(a); end;
+ local wtvp = function(...) local a, b = camera.WorldToViewportPoint(camera, ...) return newVector2(a.X, a.Y), b, a.Z end;
 
-local espCache = {};
-local function createEsp(player)
+ local espCache = {};
+ local function createEsp(player)
    local drawings = {};
    
    drawings.box = newDrawing("Square");
@@ -81,9 +81,9 @@ local function createEsp(player)
    drawings.boxoutline.ZIndex = 1;
 
    espCache[player] = drawings;
-end
+ end
 
-local function removeEsp(player)
+ local function removeEsp(player)
    if rawget(espCache, player) then
        for _, drawing in next, espCache[player] do
            drawing:Remove();
@@ -92,7 +92,7 @@ local function removeEsp(player)
    end
 end
 
-local function updateEsp(player, esp)
+ local function updateEsp(player, esp)
    local character = player and player.Character;
    if character then
        local cframe = character:GetModelCFrame();
@@ -116,22 +116,22 @@ local function updateEsp(player, esp)
        esp.box.Visible = false;
        esp.boxoutline.Visible = false;
    end
-end
+ end
 
--- main
-for _, player in next, players:GetPlayers() do
+ -- main
+ for _, player in next, players:GetPlayers() do
    if player ~= localPlayer then
        createEsp(player);
    end
-end
+ end
 
-players.PlayerAdded:Connect(function(player)
+ players.PlayerAdded:Connect(function(player)
    createEsp(player);
-end);
+ end);
 
-players.PlayerRemoving:Connect(function(player)
+ players.PlayerRemoving:Connect(function(player)
    removeEsp(player);
-end)
+ end)
 
 runService:BindToRenderStep("esp", Enum.RenderPriority.Camera.Value, function()
    for player, drawings in next, espCache do
